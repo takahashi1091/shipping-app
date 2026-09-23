@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d6efd" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="出荷支援" />
+    <title>出荷支援</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <link rel="icon" href="./icons/icon-192.png" />
+    <!-- Bootstrap 5（見た目とダークモード） -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./css/style.css?v=6" />
+  </head>
+  <body>
+    <!-- 上部（タイトル＋全メニュー）。片手操作用に下部タブも用意 -->
+    <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom fixed-top app-navbar">
+      <div class="container-fluid">
+        <span class="navbar-brand">出荷支援</span>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#appMenu"
+          aria-controls="appMenu"
+          aria-expanded="false"
+          aria-label="メニュー"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse nav-drawer" id="appMenu">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link" href="#" data-nav="ship">出荷処理</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-nav="stores">店舗マスタ管理</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-nav="history">出荷履歴</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-nav="csv-import">CSVインポート</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-nav="csv-export">CSVエクスポート</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" data-nav="settings">設定</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-3">
+      <!-- ===== 1. 出荷処理 ===== -->
+      <section class="screen" data-screen="ship">
+        <h1 class="mb-3">出荷処理</h1>
+
+        <p id="scan-status" class="text-secondary mb-2">未読取</p>
+
+        <div class="d-grid gap-2 mb-3">
+          <button id="btn-scan" type="button" class="btn btn-primary btn-lg">
+            バーコードを読む
+          </button>
+        </div>
+
+        <div id="scan-panel" class="card mb-3 d-none">
+          <div class="card-body">
+            <div id="reader" class="scan-frame mb-2"></div>
+            <button id="btn-scan-close" type="button" class="btn btn-outline-secondary w-100">
+              カメラを閉じる
+            </button>
+          </div>
+        </div>
+
+        <label class="form-label" for="store-code">店舗コード</label>
+        <div class="input-group mb-3">
+          <input
+            id="store-code"
+            type="text"
+            class="form-control store-code-input"
+            inputmode="numeric"
+            placeholder="読取または手入力"
+            autocomplete="off"
+          />
+          <button id="btn-lookup" type="button" class="btn btn-outline-primary">検索</button>
+        </div>
+        <div id="store-not-found" class="alert alert-danger d-none">
+          この店舗コードはマスタにありません。
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="mb-2">
+              <div class="info-label">店舗名</div>
+              <div id="store-name" class="info-value">—</div>
+            </div>
+            <div>
+              <div class="info-label">標準運送会社</div>
+              <div id="default-carrier" class="info-value">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="special-box" class="alert alert-warning special-alert d-none" role="alert">
+          <div class="small mb-1">特別条件（必ず確認）</div>
+          <div id="special-condition">なし</div>
+          <div id="special-hint" class="small fw-normal mt-2 mb-0"></div>
+        </div>
+
+        <p class="fw-semibold mb-2">個口数</p>
+        <div id="piece-buttons" class="piece-grid mb-3"></div>
+
+        <p class="fw-semibold mb-2">サイズ選択</p>
+        <div id="size-buttons" class="size-grid mb-3"></div>
+
+        <label class="form-label" for="carrier-select">運送会社（変更可）</label>
+        <select id="carrier-select" class="form-select form-select-lg mb-3"></select>
+
+        <label class="form-label" for="ship-note">備考（任意）</label>
+        <input id="ship-note" type="text" class="form-control form-control-lg mb-3" />
+
+        <div class="d-grid gap-2">
+          <button id="btn-register" type="button" class="btn btn-success btn-lg">登録</button>
+          <button id="btn-reset-ship" type="button" class="btn btn-outline-secondary">クリア</button>
+        </div>
+      </section>
+
+      <!-- ===== 2. 店舗マスタ ===== -->
+      <section class="screen d-none" data-screen="stores">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="mb-0">店舗マスタ</h1>
+          <span class="badge text-bg-secondary" id="store-count">0</span>
+        </div>
+        <div class="d-grid mb-3">
+          <button id="btn-store-add" type="button" class="btn btn-primary btn-lg">店舗を追加</button>
+        </div>
+        <input
+          id="store-filter"
+          type="search"
+          class="form-control form-control-lg mb-3"
+          placeholder="コード・店名で絞り込み"
+          autocomplete="off"
+        />
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>店舗</th>
+                <th>運送会社</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="store-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== 3. 出荷履歴 ===== -->
+      <section class="screen d-none" data-screen="history">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h1 class="mb-0">出荷履歴</h1>
+          <span class="badge text-bg-secondary" id="history-count">0</span>
+        </div>
+
+        <div class="card mb-3">
+          <div class="card-body py-3">
+            <p class="fw-semibold mb-2">絞り込み</p>
+            <label class="form-label" for="hist-date">日付</label>
+            <input id="hist-date" type="date" class="form-control form-control-lg mb-2" />
+            <label class="form-label" for="hist-code">店舗コード</label>
+            <input id="hist-code" type="search" class="form-control form-control-lg mb-2" inputmode="numeric" autocomplete="off" />
+            <label class="form-label" for="hist-name">店舗名</label>
+            <input id="hist-name" type="search" class="form-control form-control-lg mb-2" autocomplete="off" />
+            <label class="form-label" for="hist-carrier">運送会社</label>
+            <select id="hist-carrier" class="form-select form-select-lg mb-2"></select>
+            <label class="form-label" for="hist-size">サイズ区分</label>
+            <select id="hist-size" class="form-select form-select-lg mb-3"></select>
+            <button id="btn-hist-clear" type="button" class="btn btn-outline-secondary w-100">条件をクリア</button>
+          </div>
+        </div>
+
+        <div class="d-grid gap-2 mb-3">
+          <button id="btn-hist-csv" type="button" class="btn btn-primary btn-lg">履歴をCSV出力</button>
+          <button id="btn-hist-xlsx" type="button" class="btn btn-outline-primary btn-lg">履歴をExcel出力</button>
+        </div>
+        <p class="small text-secondary">いま見えている一覧（絞り込み後）を書き出します。</p>
+
+        <div class="table-responsive">
+          <table class="table history-table">
+            <thead>
+              <tr>
+                <th>日付</th>
+                <th>店舗</th>
+                <th>運送会社</th>
+                <th>個口</th>
+                <th>サイズ</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== 4. CSV インポート ===== -->
+      <section class="screen d-none" data-screen="csv-import">
+        <h1 class="mb-3">CSVインポート</h1>
+        <p>
+          Excel の日本語CSV（Shift_JIS）と UTF-8 の両方に対応しています。半角カタカナも読みます。<br />
+          列名はアプリ用でも、住所1 や 店舗CD でも構いません。数字の店舗コードは 6 桁に揃えます。
+        </p>
+        <pre class="bg-body-secondary p-2 rounded small mb-2">店舗コード,店舗名,標準運送会社,特別条件,郵便番号,住所1,備考</pre>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="import-replace" />
+          <label class="form-check-label" for="import-replace">
+            既存マスタを消して入れ替える（オフなら店舗コード単位で上書き追加）
+          </label>
+        </div>
+        <label class="form-label" for="csv-file">CSV読込</label>
+        <input id="csv-file" class="form-control form-control-lg mb-3" type="file" accept=".csv,text/csv" />
+        <p id="import-result" class="text-secondary"></p>
+        <p class="small text-secondary">サンプル: <a href="./sample-stores.csv">sample-stores.csv</a></p>
+        <div class="d-grid">
+          <button type="button" class="btn btn-outline-secondary" data-nav="csv-export">書き出し画面へ</button>
+        </div>
+      </section>
+
+      <!-- ===== 5. CSV エクスポート ===== -->
+      <section class="screen d-none" data-screen="csv-export">
+        <h1 class="mb-3">CSVエクスポート</h1>
+        <p>店舗マスタをカンマ区切り CSV で書き出します。Excel で編集したあと、インポート画面から再取込できます。店舗コードは 6 桁の文字列です。</p>
+        <div class="d-grid gap-2">
+          <button id="btn-export" type="button" class="btn btn-primary btn-lg">店舗マスタをCSV書き出し</button>
+          <button type="button" class="btn btn-outline-secondary" data-nav="history">出荷履歴の出力へ</button>
+          <button type="button" class="btn btn-outline-secondary" data-nav="csv-import">読込画面へ</button>
+        </div>
+      </section>
+
+      <!-- ===== 6. 設定 ===== -->
+      <section class="screen d-none" data-screen="settings">
+        <h1 class="mb-3">設定</h1>
+        <label class="form-label" for="setting-theme">画面の明るさ</label>
+        <select id="setting-theme" class="form-select form-select-lg mb-3">
+          <option value="auto">端末に合わせる</option>
+          <option value="light">ライト</option>
+          <option value="dark">ダーク</option>
+        </select>
+        <div class="form-check form-switch mb-3">
+          <input class="form-check-input" type="checkbox" id="setting-vibrate" />
+          <label class="form-check-label" for="setting-vibrate">読取・登録時に振動する</label>
+        </div>
+        <div class="form-check form-switch mb-4">
+          <input class="form-check-input" type="checkbox" id="setting-continuous" />
+          <label class="form-check-label" for="setting-continuous">登録後に続けてスキャンする</label>
+        </div>
+        <p id="setting-counts" class="text-secondary"></p>
+        <div class="d-grid gap-2">
+          <button id="btn-clear-history" type="button" class="btn btn-outline-danger">出荷履歴を全削除</button>
+          <button id="btn-clear-all" type="button" class="btn btn-danger">すべてのデータを削除</button>
+        </div>
+        <p class="small text-secondary mt-4 mb-0">
+          ホーム画面に追加: Safari の共有 → 「ホーム画面に追加」。<br />
+          データはこの iPhone の IndexedDB のみに保存されます。
+        </p>
+      </section>
+    </main>
+
+    <!-- 店舗 追加/編集 -->
+    <div class="modal fade" id="store-modal" tabindex="-1">
+      <div class="modal-dialog modal-fullscreen-sm-down">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5" id="store-edit-title">店舗を追加</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+          </div>
+          <div class="modal-body">
+            <label class="form-label" for="edit-code">店舗コード</label>
+            <input id="edit-code" class="form-control form-control-lg mb-3" />
+            <label class="form-label" for="edit-name">店舗名</label>
+            <input id="edit-name" class="form-control form-control-lg mb-3" />
+            <label class="form-label" for="edit-carrier">標準運送会社</label>
+            <select id="edit-carrier" class="form-select form-select-lg mb-3"></select>
+            <label class="form-label" for="edit-special">特別条件</label>
+            <input id="edit-special" class="form-control form-control-lg mb-3" placeholder="例: 大型のみ西濃" />
+            <label class="form-label" for="edit-postal">郵便番号（任意）</label>
+            <input id="edit-postal" class="form-control form-control-lg mb-3" inputmode="numeric" placeholder="123-4567" autocomplete="off" />
+            <label class="form-label" for="edit-address">住所（任意）</label>
+            <input id="edit-address" class="form-control form-control-lg mb-3" autocomplete="off" />
+            <label class="form-label" for="edit-note">備考</label>
+            <input id="edit-note" class="form-control form-control-lg" />
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+            <button id="btn-store-save" type="button" class="btn btn-primary btn-lg">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 当日の同一店舗の重複確認（誤登録防止） -->
+    <div class="modal fade" id="dup-modal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title fs-5">本日すでに登録済みです</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+          </div>
+          <div class="modal-body">
+            <p class="mb-2">店舗名：<strong id="dup-store-name"></strong></p>
+            <p class="mb-3">運送会社：<strong id="dup-carrier"></strong></p>
+            <p class="mb-0">どちらを行いますか？</p>
+          </div>
+          <div class="modal-footer flex-column align-items-stretch gap-2">
+            <button id="btn-dup-koguchi" type="button" class="btn btn-primary btn-lg">小口追加</button>
+            <button id="btn-dup-separate" type="button" class="btn btn-outline-primary btn-lg">別口として追加</button>
+            <button id="btn-dup-cancel" type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal">
+              キャンセル
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 下部タブ（親指で押しやすい） -->
+    <nav class="bottom-nav" aria-label="主要メニュー">
+      <button type="button" class="bottom-nav-btn" data-nav="ship">出荷</button>
+      <button type="button" class="bottom-nav-btn" data-nav="stores">店舗</button>
+      <button type="button" class="bottom-nav-btn" data-nav="history">履歴</button>
+      <button type="button" class="bottom-nav-btn" data-nav="csv-import">CSV</button>
+      <button type="button" class="bottom-nav-btn" data-nav="settings">設定</button>
+    </nav>
+
+    <!-- トースト通知 -->
+    <div id="toast-wrap" class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3 w-100">
+      <div id="toast" class="toast align-items-center text-bg-success border-0" role="status">
+        <div class="d-flex">
+          <div id="toast-body" class="toast-body"></div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="./js/constants.js?v=6"></script>
+    <script src="./js/db.js?v=6"></script>
+    <script src="./js/rules.js?v=6"></script>
+    <script src="./js/reports.js?v=6"></script>
+    <script src="./js/csv.js?v=6"></script>
+    <script src="./js/scanner.js?v=6"></script>
+    <script src="./js/app.js?v=6"></script>
+  </body>
+</html>

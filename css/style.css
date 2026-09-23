@@ -1,0 +1,175 @@
+/* style.css … スマホ縦画面・大きいボタン・押し間違えにくい余白 */
+
+:root {
+  --app-bar: 56px;
+  --tap: 52px;
+  --bottom-nav: 64px;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-size: 17px;
+  padding-top: calc(var(--app-bar) + env(safe-area-inset-top));
+  padding-bottom: calc(var(--bottom-nav) + 20px + env(safe-area-inset-bottom));
+}
+
+.app-navbar {
+  min-height: var(--app-bar);
+  padding-top: env(safe-area-inset-top);
+}
+
+.navbar-brand {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.screen h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.btn-lg,
+.size-btn,
+.piece-btn {
+  min-height: var(--tap);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.size-btn {
+  width: 100%;
+}
+
+.size-btn.active,
+.piece-btn.active {
+  color: #fff;
+}
+
+/* サイズは 2 列グリッド */
+.size-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+/* 個口数は 5 列（1〜10） */
+.piece-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+}
+
+.piece-btn {
+  width: 100%;
+  min-height: var(--tap);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.scan-frame {
+  width: 100%;
+  min-height: 220px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111;
+}
+
+.scan-frame video {
+  width: 100% !important;
+}
+
+/* 特別条件は見落とさないよう目立たせる */
+.special-alert {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.store-code-input {
+  font-size: 1.25rem !important;
+  min-height: var(--tap);
+  letter-spacing: 0.04em;
+}
+
+.nav-drawer .nav-link {
+  font-size: 1.1rem;
+  padding: 0.85rem 1rem;
+}
+
+.nav-drawer .nav-link.active {
+  font-weight: 700;
+  background: var(--bs-primary-bg-subtle);
+  border-radius: 8px;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.info-label {
+  font-size: 0.85rem;
+  color: var(--bs-secondary-color);
+  margin-bottom: 0.15rem;
+}
+
+.info-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+#toast-wrap {
+  z-index: 1100;
+  bottom: calc(var(--bottom-nav) + env(safe-area-inset-bottom));
+}
+
+/* 下部タブ: 現場で押し間違えしにくい大きなボタン */
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1030;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px;
+  background: var(--bs-body-bg);
+  border-top: 1px solid var(--bs-border-color);
+  padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+}
+
+.bottom-nav-btn {
+  min-height: var(--tap);
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--bs-body-color);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.bottom-nav-btn.active {
+  background: var(--bs-primary);
+  color: #fff;
+}
+
+.row-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.history-table th,
+.history-table td {
+  font-size: 0.95rem;
+}
+
+.history-table .store-cell {
+  min-width: 7.5rem;
+}
+
+.dup-modal .btn-lg {
+  width: 100%;
+}
